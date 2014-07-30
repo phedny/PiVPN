@@ -20,6 +20,12 @@ Please not that these instruction do not setup firewall rules related to securit
 
 Open a shell on your Raspberry Pi
 
+Let's first install the packages we're going to need and afterwards perform the necessary configuration steps. The packages we're going to use are a DHCP server and a PPTP client. To install those package, run the following command and note that it may show that starting the DHCP server fails, because it has not been configured yet.
+
+```
+sudo apt-get install isc-dhcp-server pptp-linux
+```
+
 To enable IP packet forwarding, edit `/etc/sysctl.conf` and uncomment the line 
 
 ```
@@ -44,6 +50,18 @@ COMMIT
 ```
 
 The file above added two rules to the `POSTROUTING` chain of the `nat` iptables tables. The first rule makes sure the NAT is performed on all connections that are routing to your wireless interface. The second rule does the same for the VPN connection, which will be created in a moment.
+
+Let's give the internet network interface an IP address. To do this, you need to select a range to use on this segment. It is adviced to use an address in a private range and to make sure it does not overlap with the range used on the external interface. If you don't have a lot of experience in networking, I'd suggest you pick an IP address of the form `192.168.n.1`, where `n` is a number between `1` and `250`. Use `ifconfig` to obtain the IP address of the external interface and, if it is of the form `192.168.n'.m`, use a value for `n` that is different from `n'`.
+
+Now let's say we've picked `192.168.4.1` as IP address for the internal interface. Edit the file `/etc/network/interfaces` and find the line that starts with `iface eth0` (remember that we assume `eth0` is your internal interface). Change this file and the following lines that start with a space or tab (if there are any) into:
+
+```
+iface eth0 inet static
+  address 192.168.4.1
+  netmask 255.255.255.0
+```
+
+At this point, a device on the internal network that has an IP address should be able to communicate with the internet. To hand out IP addresses using the DHCP server, we need to do a bit more configuration and after that we can do a test.
 
 > TODO
 > DHCP server
