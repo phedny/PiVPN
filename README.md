@@ -51,6 +51,21 @@ COMMIT
 
 The file above added two rules to the `POSTROUTING` chain of the `nat` iptables tables. The first rule makes sure the NAT is performed on all connections that are routing to your wireless interface. The second rule does the same for the VPN connection, which will be created in a moment.
 
+To activate those rules, we must load them into the kernel at startup. So let's write a script that does that. Create a new file `/etc/network/if-pre-up.d/iptables` and put the following lines into it:
+
+```
+#!/bin/sh
+/sbin/iptables-restore < /etc/iptables.up.rules
+```
+
+Make the script executable by running:
+
+```
+sudo chmod +x /etc/network/if-pre-up.d/iptables
+```
+
+This script will be executed one the networking stack comes up. We're going to restart the network stack after configuring the IP address of the internal network interface, so for now we leave it this was.
+
 Let's give the internal network interface an IP address. To do this, you need to select a range to use on this segment. It is adviced to use an address in a private range and to make sure it does not overlap with the range used on the external interface. If you don't have a lot of experience in networking, I'd suggest you pick an IP address of the form `192.168.n.1`, where `n` is a number between `1` and `250`. Use `ifconfig` to obtain the IP address of the external interface and, if it is of the form `192.168.n'.m`, use a value for `n` that is different from `n'`.
 
 Now let's say we've picked `192.168.4.1` as IP address for the internal interface. Edit the file `/etc/network/interfaces` and find the line that starts with `iface eth0` (remember that we assume `eth0` is your internal interface). Change this file and the following lines that start with a space or tab (if there are any) into:
@@ -93,4 +108,5 @@ We have now informed the DHCP server to hand out IP addresses in the range `192.
 [raspberrypi]: http://www.raspberrypi.org/
 [raspbian]: http://www.raspbian.org/
 [networkconfiguration]: https://wiki.debian.org/NetworkConfiguration
+[iptables]: https://wiki.debian.org/iptables
 [dhcpserver]: https://wiki.debian.org/DHCP_Server
