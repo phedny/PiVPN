@@ -100,6 +100,23 @@ subnet 192.168.4.0 netmask 255.255.255.0 {
 
 We have now informed the DHCP server to hand out IP addresses in the range `192.168.4.100` - `192.168.4.200` and also send clients the IP address of the DNS server (8.8.8.8 is the Google DNS server) and the IP address of the router. Note that the router IP address is the IP address of the internal interface, since for connected devices that is the router. Also note that the subnet address is not the same as the IP address, but it ends in a `0` instead of a `1`.
 
+At this point you should be able to connect a device on the internal interface and be able to reach the internet. Now we're going to add the configuration for a PPTP connection. Please make sure you know the IP address or the hostname of the provider and you also have the username and password for your account ready. Edit the file `/etc/ppp/chap-secrets` and add a line with the username, server name and password, e.g.
+
+```
+user1   provider2   password3
+```
+
+Also, we need to create a configuration file for the endpoint. The file is names after the provider, which we conveniently called `provider2`. So create a file `/etc/ppp/peers/provider2` and put the following lines in it (replacing `1.2.3.4` with the actual IP address or hostname of the VPN server, replacing `user1` with your username and the two occurences of `provider2` with the name of your provider):
+
+```
+pty "pptp 1.2.3.4 --nolaunchpppd"
+name user1
+remotename provider2
+require-mppe-128
+file /etc/ppp/options.pptp
+ipparam provider2
+```
+
 > TODO
 > PPTP client
 > PPTP setup
@@ -110,3 +127,4 @@ We have now informed the DHCP server to hand out IP addresses in the range `192.
 [networkconfiguration]: https://wiki.debian.org/NetworkConfiguration
 [iptables]: https://wiki.debian.org/iptables
 [dhcpserver]: https://wiki.debian.org/DHCP_Server
+[pptpclient]: http://pptpclient.sourceforge.net/howto-debian.phtml
