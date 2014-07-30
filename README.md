@@ -51,23 +51,46 @@ COMMIT
 
 The file above added two rules to the `POSTROUTING` chain of the `nat` iptables tables. The first rule makes sure the NAT is performed on all connections that are routing to your wireless interface. The second rule does the same for the VPN connection, which will be created in a moment.
 
-Let's give the internet network interface an IP address. To do this, you need to select a range to use on this segment. It is adviced to use an address in a private range and to make sure it does not overlap with the range used on the external interface. If you don't have a lot of experience in networking, I'd suggest you pick an IP address of the form `192.168.n.1`, where `n` is a number between `1` and `250`. Use `ifconfig` to obtain the IP address of the external interface and, if it is of the form `192.168.n'.m`, use a value for `n` that is different from `n'`.
+Let's give the internal network interface an IP address. To do this, you need to select a range to use on this segment. It is adviced to use an address in a private range and to make sure it does not overlap with the range used on the external interface. If you don't have a lot of experience in networking, I'd suggest you pick an IP address of the form `192.168.n.1`, where `n` is a number between `1` and `250`. Use `ifconfig` to obtain the IP address of the external interface and, if it is of the form `192.168.n'.m`, use a value for `n` that is different from `n'`.
 
 Now let's say we've picked `192.168.4.1` as IP address for the internal interface. Edit the file `/etc/network/interfaces` and find the line that starts with `iface eth0` (remember that we assume `eth0` is your internal interface). Change this file and the following lines that start with a space or tab (if there are any) into:
 
 ```
+auto eth0
 iface eth0 inet static
   address 192.168.4.1
   netmask 255.255.255.0
 ```
 
-At this point, a device on the internal network that has an IP address should be able to communicate with the internet. To hand out IP addresses using the DHCP server, we need to do a bit more configuration and after that we can do a test.
+Make sure the `auto eht0` line is not duplicated if it was already there. To read the network interface configuration, you can restart the networking stack using:
+
+```
+sudo /etc/init.d/networking restart
+```
+
+At this point, a device on the internal network that has an IP address should be able to communicate with the internet. To hand out IP addresses using the DHCP server, we need to do a bit more configuration and after that we can do a test. First, edit the file `/etc/default/isc-dhcpserver` and find the line starting with `INTERFACES` and add your internal interface to it, for example:
+
+```
+INTERFACES="eth0"
+```
+
+At this point the DHCP server will be restricted to respond to requests on the given interface, but we need to specify in what way it needs to respond. Therefore edit the file `/etc/dhcp/dhcpd.conf`. Just leave everything as it is and add the following configuration to the bottom of the file:
+
+```
+option domain-name-servers 8.8.8.8;
+subnet 192.168.4.0 netmask 255.255.255.0 {
+  range 192.168.4.100 192.168.4.200;
+  option routers 192.168.4.1;
+```
+
+We have now informed the DHCP server to hand out IP addresses in the range `192.168.4.100` - `192.168.4.200` and also send clients the IP address of the DNS server (8.8.8.8 is the Google DNS server) and the IP address of the router. Note that the router IP address is the IP address of the internal interface, since for connected devices that is the router. Also note that the subnet address is not the same as the IP address, but it ends in a `0` instead of a `1`.
 
 > TODO
-> DHCP server
 > PPTP client
 > PPTP setup
 > Android stuff
 
 [raspberrypi]: http://www.raspberrypi.org/
 [raspbian]: http://www.raspbian.org/
+[networkconfiguration]: https://wiki.debian.org/NetworkConfiguration
+[dhcpserver]: https://wiki.debian.org/DHCP_Server
