@@ -1,0 +1,15 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <EditTextPreference
+        android:key="pi_hostname"
+        android:title="@string/pi_hostname" />
+
+    <EditTextPreference
+        android:key="pi_username"
+        android:title="@string/pi_username" />
+
+    <EditTextPreference
+        android:key="pi_password"
+        android:title="@string/pi_password" />
+
+</PreferenceScreen>
